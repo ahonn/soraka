@@ -11,11 +11,8 @@
 自动加载脚本需要安装 [tampermonkey](http://tampermonkey.net/)，仅适用于 Chrome, Microsoft Edge, Safari, Opera Next, 和 Firefox。
 
 脚本添加步骤：
-- 打开 [soraka.js](https://raw.githubusercontent.com/ahonn/soraka/master/soraka.js)，并全选复制脚本
-- 打开浏览器
-- 进入 Tampermonkey 管理界面
-- 选择添加脚本
-- 将代码粘贴后保存即可
+- 点击 [soraka.js](https://github.com/ahonn/soraka/raw/master/soraka.user.js)，并安装脚本
+- 开启 Tampermonkey 插件（具体使用方式请自行搜索）
 
 登陆 Mooc 网站，进入到视频页面即可自动观看。安装该浏览器插件后将自动执行脚本，并检查是否为视频播放页面。若是，则自动观看视频。无需重复以上操作。
 
