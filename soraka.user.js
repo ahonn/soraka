@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         Soraka
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.3
 // @description  超星 Mooc 视频助手 for Tampermonkey
 // @author       Ahonn <ahonn95@outlook.com>
 // @match        https://mooc1-2.chaoxing.com/mycourse/studentstudy?*
-// @updateURL    https://github.com/ahonn/soraka/raw/master/soraka.user.js
 // @grant        none
+// @connect     raw.githubusercontent.com
+// @connect     greasyfork.org
 // ==/UserScript==
 
 class Soraka {
@@ -395,7 +396,7 @@ class Soraka {
                 // if (self.config.courseid == '200311273') {
                   // self.doHomeWork();
                 // }
-                alert('自动观看完毕，请完成课后作业～');
+                alert('自动观看完毕，请完成章节测试～');
               });
           });
         }
