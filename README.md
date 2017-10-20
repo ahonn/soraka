@@ -29,7 +29,7 @@
 
 - 打开浏览器按 F12
 - 点击控制台
-- 打开 [soraka.js](https://raw.githubusercontent.com/ahonn/soraka/master/soraka.js)，并全选复制脚本
+- 打开 [soraka.js](https://raw.githubusercontent.com/ahonn/soraka/master/soraka.user.js)，并全选复制脚本
 - 黏贴到控制台中并回车
 
 **手动加载脚本需要在每次进入视频播放页时重复执行以上步骤**
