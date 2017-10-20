@@ -37,7 +37,8 @@
 ## 声明
 Soraka 脚本仅供学习与交流，出现任何问题概不负责。
 
-关于脚本学习交流相关，请联系：[ahonn95@outlook.com](mailto:ahonn95@outlook.com)
+对脚本有任何意见或者建议，请在 [Greasy Fork Disscussion](https://greasyfork.org/zh-CN/forum/post/discussion?script=34358) 发起讨论。
+或者通过邮件与我（[ahonn95@outlook.com](mailto:ahonn95@outlook.com)）联系。
 
 本脚本遵循 [WTFPL](http://www.wtfpl.net/about/)
 
