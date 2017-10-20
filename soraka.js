@@ -2,9 +2,10 @@
 // @name         Soraka
 // @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  超星 Mooc 视频刷课脚本 for Tampermonkey
+// @description  超星 Mooc 视频助手 for Tampermonkey
 // @author       Ahonn <ahonn95@outlook.com>
 // @match        https://mooc1-2.chaoxing.com/mycourse/studentstudy?*
+// @updateURL    https://raw.githubusercontent.com/ahonn/soraka/master/soraka.js
 // @grant        none
 // ==/UserScript==
 
@@ -124,7 +125,6 @@ class Soraka {
               };
             }
           }).toArray();
-          console.log(chapters);
           resolve(chapters);
         },
       });
@@ -349,7 +349,6 @@ class Soraka {
                 console.log(data);
               },
             })
-            console.log(postData);
           },
         });
       });
