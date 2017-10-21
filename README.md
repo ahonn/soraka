@@ -20,14 +20,14 @@
 
 **注意：该脚本不需要点击播放视频，在自动观看过程中也不会播放视频，脚本执行后视频自动完成**
 
-在浏览器中按 F12，点击控制台课查看到以下信息：
+在浏览器中按 F12（MacOs: command + option + i），点击控制台课查看到以下信息：
 ![](http://ouv0frko5.bkt.clouddn.com/2017-10-20-Jietu20171020-130934.jpg)
 
 (**由于百度文库中的章节测试答案与真实章节测试顺序不符，暂时需要自行手动完成**)
 
 ### 手动加载脚本
 
-- 打开浏览器按 F12
+- 打开浏览器按 F12（MacOs: command + option + i）
 - 点击控制台
 - 打开 [soraka.js](https://raw.githubusercontent.com/ahonn/soraka/master/soraka.user.js)，并全选复制脚本
 - 黏贴到控制台中并回车
