@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Soraka
 // @namespace    http://tampermonkey.net/
-// @version      0.4.0
+// @version      0.4.2
 // @description  超星 Mooc 视频助手 for Tampermonkey
 // @author       Ahonn <ahonn95@outlook.com>
 // @match        https://mooc1-2.chaoxing.com/mycourse/studentstudy?*
@@ -229,7 +229,7 @@ class Soraka {
 
     return new Promise(resolve => {
       const percentum = Math.floor(playingTime / duration * 100);
-      this.info(`正在自动观看【${this.chapter.title}】${percentum}% `);
+      this.info(`正在自动观看【${this.chapter.title}】，进度: ${percentum}% `);
       $.ajax({
         url,
         dataType: 'json',
@@ -245,16 +245,17 @@ class Soraka {
    */
   watchVideo() {
     let now = 0;
+    const step = 120;
     const { duration } = this.config;
     const { questions } = this.config;
 
-    this.info(`开始自动观看【${this.chapter.title}】`);
+    this.info(`开始自动观看【${this.chapter.title}】，时长: ${duration}s`);
     return new Promise(resolve => {
       (function loop(res) {
         // 视频观看完毕时执行下一个部分
         if (now >= duration) {
           this.sendVideoLog(duration).then(_ => {
-            this.info(`完成自动观看【${this.chapter.title}】`);
+            this.info(`完成自动观看【${this.chapter.title}】，进度: 100%`);
             resolve();
           });
           return;
@@ -272,21 +273,20 @@ class Soraka {
         }
 
         // 发送心跳请求
-        // 当前部分之前看过时，间隔 5 秒发送新请求
         // 当前部分之前未看过时，间隔 120 秒发送请求
         new Promise(_resolve => {
           this.sendVideoLog(now)
             .then(res => {
               if (res && res.isPassed) {
-                this.info(`完成自动观看【${this.chapter.title}】`);
+                this.info(`完成自动观看【${this.chapter.title}】，进度: 100%`);
                 resolve();
               } else {
-                setTimeout(_ => _resolve(res), 120 * 1000);
+                setTimeout(_ => _resolve(res), step * 1000);
               }
             });
         }).then(loop.bind(this));
 
-        now += 120;
+        now += step;
       }).call(this);
     });
   }
