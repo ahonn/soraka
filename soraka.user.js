@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Soraka
 // @namespace    http://tampermonkey.net/
-// @version      0.3.1
+// @version      0.4.0
 // @description  超星 Mooc 视频助手 for Tampermonkey
 // @author       Ahonn <ahonn95@outlook.com>
 // @match        https://mooc1-2.chaoxing.com/mycourse/studentstudy?*
@@ -97,7 +97,10 @@ class Soraka {
     return new Promise(resolve => {
       $.ajax({
         url,
-        success: data => resolve(data[0].datas),
+        success: data => {
+          const datas = (data & data[0]) ? data[0].datas : [];
+          resolve(datas);
+        },
       });
     });
   }
@@ -271,11 +274,15 @@ class Soraka {
         // 发送心跳请求
         // 当前部分之前看过时，间隔 5 秒发送新请求
         // 当前部分之前未看过时，间隔 120 秒发送请求
-        new Promise(resolve => {
+        new Promise(_resolve => {
           this.sendVideoLog(now)
             .then(res => {
-              const timeout = res && res.isPassed ? 5 : 120;
-              setTimeout(_ => resolve(res), timeout * 1000);
+              if (res && res.isPassed) {
+                this.info(`完成自动观看【${this.chapter.title}】`);
+                resolve();
+              } else {
+                setTimeout(_ => _resolve(res), 120 * 1000);
+              }
             });
         }).then(loop.bind(this));
 
