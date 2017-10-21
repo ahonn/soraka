@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Soraka
 // @namespace    http://tampermonkey.net/
-// @version      0.4.3
+// @version      0.4.2
 // @description  超星 Mooc 视频助手 for Tampermonkey
 // @author       Ahonn <ahonn95@outlook.com>
 // @match        https://mooc1-2.chaoxing.com/mycourse/studentstudy?*
-// @grant        GM_info
+// @grant        none
 // @connect      raw.githubusercontent.com
 // @connect      greasyfork.org
 // ==/UserScript==
@@ -21,6 +21,7 @@ class Soraka {
     this.script.src = "//code.jquery.com/jquery-latest.min.js";
     this.script.onload = this.load;
 
+    this.checkVersion();
     window.soraka = this;
   }
 
@@ -61,19 +62,20 @@ class Soraka {
   checkVersion() {
     const currentVersion = GM_info.script.version;
     $.ajax({
-      url: "https://github.com/ahonn/soraka/blob/master/package.json",
-      success: info => {
+      url: "https://raw.githubusercontent.com/ahonn/soraka/master/package.json",
+      success: data => {
+        const info = JSON.parse(data);
         const lastVersion = info.version;
         if (currentVersion != lastVersion) {
           this.info(`当前脚本版本为 v${currentVersion}，最新版本为 v${lastVersion}，请检查更新...`);
-        };
+        }
       },
-    })
+    });
   }
 
   /**
    * 格式化日志输出
-   * 
+   *
    * @param {string} message 日志文字
    */
   info(message) {
@@ -400,7 +402,6 @@ class Soraka {
     self.jumpToLastChapter()
       .then((isLast) => {
         if (isLast) {
-          self.checkVersion();
           Promise.all([
             self.getQuestion(config.mid),
             self.getStatus(config.objectId),
