@@ -1,0 +1,17 @@
+{
+  "name": "Soraka",
+  "version": "0.4.3",
+  "description": "超星 Mooc 视频助手脚本",
+  "main": "soraka.user.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahonn/soraka.git"
+  },
+  "keywords": [],
+  "author": "ahonn <ahonn95@outlook.com>",
+  "license": "WTFPL",
+  "bugs": {
+    "url": "https://github.com/ahonn/soraka/issues"
+  },
+  "homepage": "https://github.com/ahonn/soraka#readme"
+}
