@@ -1,98 +1,187 @@
 // ==UserScript==
 // @name         Soraka
-// @namespace    http://tampermonkey.net/
-// @version      0.4.4
+// @namespace    https://github.com/ahonn/soraka
+// @version      0.5.0
 // @description  超星 Mooc 视频助手 for Tampermonkey
 // @author       Ahonn <ahonn95@outlook.com>
 // @match        https://mooc1-2.chaoxing.com/mycourse/studentstudy?*
-// @grant        none
+// @grant        GM_addStyle
 // @connect      raw.githubusercontent.com
 // @connect      greasyfork.org
 // ==/UserScript==
 
+////////////////////////////////////////////////////////////////////////
+//                              Logger                               //
+////////////////////////////////////////////////////////////////////////
+
+class Logger {
+  constructor({ prefix, repo }) {
+    this.prefix = prefix;
+    this.repo = repo;
+
+    const html = `
+    <div class="${prefix}-logger">
+      <h1 class="${prefix}-logger-title">
+        <a class="${prefix}-logger-repo" href="${repo}">
+          ${prefix}
+        </a>
+      </h1>
+      <ul class="${prefix}-logger-list">
+        <li id="${prefix}-loading" class="${prefix}-logger-item"></li>
+        <li id="${prefix}-version" class="${prefix}-logger-item"></li>
+        <li id="${prefix}-status" class="${prefix}-logger-item"></li>
+        <li id="${prefix}-progress" class="${prefix}-logger-item"></li>
+      </ul>
+    </div>
+    `;
+    document.body.innerHTML += html;
+    this.addGlobalStyle();
+  }
+
+  addGlobalStyle() {
+    const { prefix } = this;
+    GM_addStyle(`
+      #btnOpt {
+        display: none;
+      }
+
+      .${prefix}-logger {
+        width: 100vw;
+        position: fixed;
+        bottom: 0;
+        background-color: #24292e;
+        z-index: 999;
+        0 -2px 10px #ababab;
+      }
+
+      .${prefix}-logger-title {
+        padding: 3px 10px;
+        border-bottom: 1px solid #666;
+      }
+
+      .${prefix}-logger-repo {
+        color: #dd4c4f;
+      }
+
+      .${prefix}-logger-list {
+        list-style: none;
+        padding: 10px;
+        color: #fafafa;
+      }
+
+      .${prefix}-logger-list a {
+        color: #dd4c4f;
+      }
+    `);
+  }
+
+  info(type, message) {
+    const { prefix } = this;
+    const msg = prefix + ' > ' + message
+    const $info = document.querySelector(`#${prefix}-${type}`);
+    $info.innerHTML = msg;
+    console.log(msg);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+//                               Soraka                               //
+////////////////////////////////////////////////////////////////////////
+
+const API_HOST = 'https://mooc1-2.chaoxing.com';
+const RAW_HOST = 'https://raw.githubusercontent.com/ahonn/soraka/master';
+const SCRIPT_URL = 'https://greasyfork.org/zh-CN/scripts/34358-soraka';
+
+// load script message
+const LOAD_SCRIPT_LOADING = '正在加载脚本...';
+const LOAD_SCRIPT_FAILURE = '脚本加载失败，请刷新重试...';
+const LOAD_SCRIPT_SUCCESS = '脚本加载完成...';
+
+// check version message
+const CHECK_VERSION_LOADING = '正在进行脚本版本检查...';
+const CHECK_VERSION_FAILURE = '脚本版本检查失败，请刷新重试...';
+const NOT_LAST_VERSION = (current, last) => `当前版本为 v${current}，最新版本为 v${last}，请<a href='${SCRIPT_URL}'>点击更新</a>...`;
+const IS_LAST_VERSION = (current) => `当前版本为 v${current}，无需更新...`;
+
+// course message
+const LOAD_CHAPTERS_INFO = `正在获取章节信息...`;
+const JUMP_TO_LAST_CHAPTER = `正在跳转到最新章节...`;
+const LOAD_CHAPTERS_VIDEO_INFO = `正在获取章节视频信息...`;
+const LOAD_CHAPTERS_QUESTION_INFO = `正在获取视频问题信息...`;
+const BEGIN_WATCH_CHAPTER_VIDEO = (title, duration) => `开始自动观看视频: ${title}，时长: ${duration}s`;
+const END_WATCH_CHAPTER_VIDEO = (title, duration) => `完成自动观看视频: ${title}`;
+const WATCH_CHAPTER_VIDEO_PROGRESS = (progress, percentum) => `观看进度: ${progress} ${percentum}%`;
+const AUTO_ANSWER_QUESTION = (question) => `自动回答视频问题: ${question}`;
+const ALERT_CHAPTER_TEST = `已完成自动观看，请完成章节测试...`;
+
 class Soraka {
   constructor() {
     this.iframe = null;
-    this.chapter = null;
     this.config = {};
-    this.host = 'https://mooc1-2.chaoxing.com';
+    this.logger = new Logger({
+      prefix: 'Soraka',
+      repo: GM_info.script.namespace,
+    });
 
     this.script = document.createElement('script');
     this.script.src = "//code.jquery.com/jquery-latest.min.js";
-    this.script.onload = this.load;
-
-    this.checkVersion();
-    window.soraka = this;
+    this.script.onload = this.onload.bind(this);
   }
 
-  /**
-   * 初始化脚本，当视频 iframe 加载完毕时加载脚本
-   * (通过视频 iframe 下是否含有 config 方法判断)
-   *
-   * @returns {undefined}
-   */
   init() {
-    var times = 0;
-    var id = setInterval(() => {
-      // 超过 30 秒取消定时器，避免死循环
+    let times = 0;
+    let id = setInterval(() => {
       if (times >= 30) {
         clearInterval(id);
-        alert('加载失败，请刷新重试...');
+        this.logger.info('loading', LOAD_SCRIPT_FAILURE);
+        alert(LOAD_SCRIPT_FAILURE);
       } else {
         times ++;
       }
 
+      this.logger.info('loading', LOAD_SCRIPT_LOADING);
       try {
-        // 获取内容 iframe body
-        var wrapper = window.iframe.contentWindow.document.body;
-        // 获取视频 iframe window 对象，并保持到 this.iframe 中
-        this.iframe = wrapper.getElementsByTagName('iframe')[0].contentWindow;
+        let wrapper = document.querySelector('#iframe').contentWindow.document.body;
+        this.iframe = wrapper.querySelector('iframe').contentWindow;
 
-        this.info('正在加载脚本...');
-        if (this.iframe.config !== undefined) {
+        if (this.iframe.config) {
           clearInterval(id);
           document.head.append(this.script);
-
-          this.info('脚本加载完成...');
+          this.logger.info('loading', LOAD_SCRIPT_SUCCESS);
         }
       } catch (e) {}
     }, 500);
   }
 
   checkVersion() {
-    const currentVersion = GM_info.script.version;
-    $.ajax({
-      url: "https://raw.githubusercontent.com/ahonn/soraka/master/package.json",
-      success: data => {
-        const info = JSON.parse(data);
-        const lastVersion = info.version;
-        if (currentVersion != lastVersion) {
-          this.info(`当前脚本版本为 v${currentVersion}，最新版本为 v${lastVersion}，请检查更新...`);
+    const current = GM_info.script.version;
+    this.logger.info('version', CHECK_VERSION_LOADING);
+    return new Promise(resolve => {
+      $.ajax({
+        url: `${RAW_HOST}/package.json`,
+        success: data => {
+          const info = JSON.parse(data);
+          const last = info.version;
+          if (current >= last) {
+            this.logger.info('version', IS_LAST_VERSION(current));
+          } else {
+            this.logger.info('version', NOT_LAST_VERSION(current, last));
+          }
+          resolve();
+        },
+        error: _ => {
+          this.logger.info('version', CHECK_VERSION_FAILURE);
         }
-      },
+      });
     });
   }
 
-  /**
-   * 格式化日志输出
-   *
-   * @param {string} message 日志文字
-   */
-  info(message) {
-    console.info(`Soraka: ${message}`);
-  }
-
-  /**
-   * 获取 dtoken 与 duration 参数，用于后面的请求
-   *
-   * @returns {promise}
-   */
   getStatus(objectid) {
     var k = this.iframe.getCookie('fid') || '';
     var _dc = Date.now();
-    const url = `${this.host}/ananas/status/${objectid}?k=${k}&_dc=${_dc}`;
+    const url = `${API_HOST}/ananas/status/${objectid}?k=${k}&_dc=${_dc}`;
 
-    this.info('正在获取课程信息...');
+    this.logger.info('status', LOAD_CHAPTERS_VIDEO_INFO);
     return new Promise(resolve => {
       $.ajax({
         url,
@@ -101,32 +190,53 @@ class Soraka {
     });
   }
 
-  /**
-   * 获取视频问题的具体内容
-   *
-   * @param {string} mid mid 通过 this.iframe.config 获取
-   * @returns {promise}
-   */
   getQuestion(mid) {
-    const url = `${this.host}/richvideo/initdatawithviewer?&start=undefined&mid=${mid}`;
+    const url = `${API_HOST}/richvideo/initdatawithviewer?&start=undefined&mid=${mid}`;
+
+    this.logger.info('status', LOAD_CHAPTERS_QUESTION_INFO);
     return new Promise(resolve => {
       $.ajax({
         url,
         success: data => {
-          const datas = (data & data[0]) ? data[0].datas : [];
+          const datas = (data && data[0]) ? data[0].datas : [];
           resolve(datas);
         },
       });
     });
   }
 
-  /**
-   * 获取当前能够观看的所有章节
-   *
-   * @returns {promise}
-   */
+  getConfig() {
+    const settings = this.iframe.parent.AttachmentSetting;
+    const config = {
+      mid: this.iframe.config('mid'),
+      objectId: this.iframe.config('objectid'),
+      clazzId: settings.defaults.clazzId,
+      userid: settings.defaults.userid,
+      knowledgeid: settings.defaults.knowledgeid,
+      courseid: settings.defaults.courseid,
+      otherInfo: settings.attachments[0].otherInfo,
+      jobid: settings.attachments[0].jobid,
+    };
+
+    return Promise.all([
+      this.getStatus(config.objectId),
+      this.getQuestion(config.mid),
+    ]).then(data => {
+      const status = data[0];
+      config.duration = status.duration;
+      config.dtoken = status.dtoken;
+
+      const questions = data[1];
+      config.questions = questions;
+
+      this.config = Object.assign(this.config, config);
+    });
+  }
+
   getChapters() {
     const url = $('.goback a').attr('href');
+    this.logger.info('status', LOAD_CHAPTERS_INFO);
+
     return new Promise(resolve => {
       $.ajax({
         url,
@@ -136,9 +246,10 @@ class Soraka {
 
           const chapters = $chapters.map((i, el) => {
             const $link = $(el).find('.articlename a');
+            const $number = $(el).find('span.icon');
             if ($link.attr('href')) {
               return {
-                number: $(el).find('span.icon').text().replace(/\s+/g, ' ').trim().split(' ')[0],
+                number: $number.text().replace(/\s+/g, ' ').trim().split(' ')[0],
                 title: $link.attr('title'),
                 href: $link.attr('href'),
               };
@@ -150,55 +261,39 @@ class Soraka {
     });
   }
 
-  /**
-   * 跳转到最新的章节
-   *
-   * @returns {boolean} 是否跳转到最新的章节
-   */
   jumpToLastChapter() {
     return this.getChapters().then(chapters => {
-      const lastActiveChapter = this.chapter = chapters.pop();
+      const lastActiveChapter = chapters.pop();
+      this.config.chapter = lastActiveChapter;
 
-      const last = this.host + lastActiveChapter.href;
+      const last = API_HOST + lastActiveChapter.href;
       const current = window.location.href;
 
       if (last !== current) {
-        this.info('正在跳转到最新课程...');
+        this.logger.info('status', JUMP_TO_LAST_CHAPTER);
         window.location.replace(last);
         return false;
       }
-      this.number = lastActiveChapter.number;
       return true;
     });
   }
 
-  /**
-   * 回答视频问题，随机选择答案
-   * (当回答错误时将会发生请求，为了模拟正常操作，答案随机)
-   *
-   * @param {object} question 获取的问题详情
-   * @returns {undefined}
-   */
   answerVideoQuestion(question) {
     const randomId = Math.floor(Math.random() * question.options.length);
     // 回答错误时发送请求
     if (!question.options[randomId].isRight) {
       const resourceid = question.resourceId;
       const answer = question.options[randomId].name;
-      const url = `https://mooc1-2.chaoxing.com/richvideo/qv?resourceid=${resourceid}&answer='${answer}'`;
+      const url = `${API_HOST}/richvideo/qv?resourceid=${resourceid}&answer='${answer}'`;
       $.ajax({
         url,
-        success: _ => this.info(`自动回答问题【${question.description}】`),
+        success: _ => {
+          this.logger.info('status', AUTO_ANSWER_QUESTION(question.description));
+        }
       });
     }
   }
 
-  /**
-   * 生成视频心跳请求中的 enc 参数
-   *
-   * @param {number} playingTime 视频播放时长
-   * @returns {string} 加密字符串
-   */
   encodeEnc(playingTime) {
     // 反编译 player.swf 文件，加密字符串位于: com.chaoxing.player.comp.ExternalComp:L235
     const salt = 'd_yHJ!$pdA~5';
@@ -218,16 +313,10 @@ class Soraka {
     return MD5(encStr);
   }
 
-  /**
-   * 观看视频时发送的心跳请求
-   *
-   * @param {number} playingTime 视频播放时长
-   * @returns {promise}
-   */
   sendVideoLog(playingTime) {
     const { dtoken, userid, jobid, objectId, duration, otherInfo, clazzId } = this.config;
 
-    let url = this.host + `/multimedia/log/${dtoken}`;
+    let url = API_HOST + `/multimedia/log/${dtoken}`;
     url += `?userid=${userid}`;
     url += `&rt=0.9`;
     url += `&jobid=${jobid}`;
@@ -243,8 +332,6 @@ class Soraka {
     url += `&enc=` + this.encodeEnc(playingTime);
 
     return new Promise(resolve => {
-      const percentum = Math.floor(playingTime / duration * 100);
-      this.info(`正在自动观看【${this.chapter.title}】，进度: ${percentum}% `);
       $.ajax({
         url,
         dataType: 'json',
@@ -253,31 +340,31 @@ class Soraka {
     });
   }
 
-  /**
-   * 自动观看视频，定时发送 log 请求
-   *
-   * @returns {promise}
-   */
   watchVideo() {
     let now = 0;
-    const step = 120;
-    const { duration } = this.config;
-    const { questions } = this.config;
+    let count = 0;
+    const loopStep = 5;
+    const logStep = 120;
+    const { duration, questions, chapter } = this.config;
 
-    this.info(`开始自动观看【${this.chapter.title}】，时长: ${duration}s`);
+    this.logger.info('status', BEGIN_WATCH_CHAPTER_VIDEO(chapter.title, duration));
+
+    const finishWatch = () => {
+      this.logger.info('status', END_WATCH_CHAPTER_VIDEO(chapter.title));
+
+      const progressBar = '|' + '█'.repeat(50) + '|';
+      this.logger.info('progress', WATCH_CHAPTER_VIDEO_PROGRESS(progressBar, 100));
+    }
+
     return new Promise(resolve => {
       (function loop(res) {
-        // 视频观看完毕时执行下一个部分
         if (now >= duration) {
           this.sendVideoLog(duration).then(_ => {
-            this.info(`完成自动观看【${this.chapter.title}】，进度: 100%`);
+            finishWatch();
             resolve();
           });
-          return;
         }
 
-        // 当到达视频问题的时间点时，回答视频问题，并发送心跳请求
-        // 将当前播放时间调整为弹出问题时的时间
         for(let i = 0; i < questions.length; i++) {
           if (now >= questions[i].startTime) {
             const question = questions.shift();
@@ -287,139 +374,44 @@ class Soraka {
           }
         }
 
-        // 发送心跳请求
-        // 当前部分之前未看过时，间隔 120 秒发送请求
         new Promise(_resolve => {
-          this.sendVideoLog(now)
-            .then(res => {
+          const percentum = Math.floor(now / duration * 100);
+          const progress = Math.floor(percentum / 2);
+          const progressBar = '|' + '█'.repeat(progress) + '░'.repeat(50 - progress) + '|';
+          this.logger.info('progress', WATCH_CHAPTER_VIDEO_PROGRESS(progressBar, percentum));
+
+          if (count === logStep || now === 0) {
+            count = 0;
+            this.sendVideoLog(now).then(res => {
               if (res && res.isPassed) {
-                this.info(`完成自动观看【${this.chapter.title}】，进度: 100%`);
+                finishWatch();
                 resolve();
               } else {
-                setTimeout(_ => _resolve(res), step * 1000);
+                setTimeout(_ => _resolve(), loopStep * 1000);
               }
             });
+          } else {
+            setTimeout(_ => _resolve(), loopStep * 1000);
+          }
         }).then(loop.bind(this));
 
-        now += step;
+        count += loopStep;
+        now += loopStep;
       }).call(this);
     });
   }
 
-  /**
-   * 获取课后作业相关参数
-   *
-   * @returns {promise}
-   */
-  getHomeWorkConfig() {
-    const { clazzId, courseid, knowledgeid } = this.config;
-    const url = `${this.host}/knowledge/cards?clazzid=${clazzId}&courseid=${courseid}&knowledgeid=${knowledgeid}&num=1&v=20160407-1`;
-    return new Promise(resolve => {
-      $.ajax({
-        url,
-        success: data => resolve(data),
-      });
-    }).then(data => {
-      // 获取 script 中定义参数的语句，执行
-      const argsDefine = $(data)[19].innerText.split("\n")[6];
-      let mArg = null;
-      eval(argsDefine);
-
-      this.config.work = mArg.attachments[0];
-      this.config.work.workid = this.config.work.property.workid;
-      this.config.work.utEnc = window.utEnc;
-      return this.config;
-    });
-  }
-
-  /**
-   * 完成课后作业
-   * (获取课后作业 iframe，获取问题并自动作答)
-   *
-   * @returns {promise}
-   */
-  doHomeWork() {
-    this.getHomeWorkConfig()
-      .then(config => {
-        const { knowledgeid, clazzId, courseid } = config;
-        const { jobid, workid, utEnc, enc } = config.work;
-        const url = `https://mooc1-2.chaoxing.com/api/work?api=1&workId=${workid}&jobid=${jobid}&needRedirect=true&knowledgeid=${knowledgeid}&ut=s&clazzId=${clazzId}&type=&enc=${enc}&utEnc=${utEnc}&courseid=${courseid}`;
-
-        $.ajax({
-          url,
-          success: data => {
-            const $data = $(data);
-            config.work.problemId = $data.find('input[name^=answertype]').map((i, el) => {
-              return $(el).attr('name').match(/\d+$/)[0];
-            }).toArray();
-            const answerwqbid = config.work.problemId.join(',') + ',';
-            const answer = Answer[this.number];
-
-            const $form = $data.find("#form1");
-            $form.find('input#answerwqbid').val(answerwqbid);
-            config.work.problemId.forEach((el, i) => {
-              const thisAns = answer[i];
-              $form.find(`input[name=answer${el}][value=${thisAns}]`).prop('checked', true);
-            });
-
-            const postData = $form.serialize();
-
-            $.ajax({
-              url: '/work/' + $form.attr('action'),
-              type: $form.attr('method'),
-              data: postData,
-              success: data => {
-                console.log(data);
-              },
-            });
-          },
-        });
-      });
-  }
-
-  /**
-   * 当脚本加载道页面后执行脚本内容
-   *
-   * @returns {undefined}
-   */
-  load() {
-    // 获取 soraka 对象，该函数在 script 标签中，上下文不在对象内
-    const self = window.soraka;
-
-    // 从页面中获取需要的参数
-    const settings = self.iframe.parent.AttachmentSetting;
-    const config = self.config = {
-      mid: self.iframe.config('mid'),
-      objectId: self.iframe.config('objectid'),
-      clazzId: settings.defaults.clazzId,
-      userid: settings.defaults.userid,
-      knowledgeid: settings.defaults.knowledgeid,
-      courseid: settings.defaults.courseid,
-      otherInfo: settings.attachments[0].otherInfo,
-      jobid: settings.attachments[0].jobid,
-    };
-
-    self.jumpToLastChapter()
-      .then((isLast) => {
+  onload() {
+    this.checkVersion()
+      .then(this.jumpToLastChapter.bind(this))
+      .then(isLast => {
         if (isLast) {
-          Promise.all([
-            self.getQuestion(config.mid),
-            self.getStatus(config.objectId),
-          ]).then(data => {
-            const questions = data[0];
-            config.questions = questions;
-
-            const status = data[1];
-            config.duration = status.duration;
-            config.dtoken = status.dtoken;
-          }).then(_ => {
-            self.watchVideo()
-              .then(_ => {
-                // if (self.config.courseid == '200311273') {
-                  // self.doHomeWork();
-                // }
-                alert('自动观看完毕，请完成章节测试～');
-              });
+          this.getConfig().then(_ => {
+            this.watchVideo().then(_ => {
+              setTimeout(_ => {
+                alert(ALERT_CHAPTER_TEST);
+              }, 500);
+            });
           });
         }
       });
@@ -428,41 +420,6 @@ class Soraka {
 
 const soraka = new Soraka();
 soraka.init();
-
-////////////////////////////////////////////////////////////////////////
-//                          Homework Answer                           //
-////////////////////////////////////////////////////////////////////////
-// const Answer = {
-  // '1.1': ['D', 'A', 'true'],
-  // '1.2': ['C', 'C', 'D', 'true'],
-  // '1.3': ['C', 'B', 'true'],
-  // '1.4': ['D', 'D', 'false'],
-  // '1.5': ['true', 'true'],
-  // '1.6': ['C', 'B', 'D'],
-  // '2.1': ['D', 'C', 'B'],
-  // '2.2': ['B', 'B', 'A'],
-  // '2.3': ['B', 'D', 'false'],
-  // '2.4': ['C', 'D', 'true'],
-  // '2.5': ['D', 'A', 'false'],
-  // '2.6': ['C', 'D', 'true'],
-  // '2.7': ['D'],
-  // '2.8': ['D', 'A', 'true'],
-  // '2.9': ['D'],
-  // '3.1': ['B', 'D', 'false', 'true'],
-  // '3.2': ['D', 'D', 'C', 'true', 'false'],
-  // '3.3': ['B', 'C', 'D', 'true'],
-  // '3.4': ['C', 'B', 'false'],
-  // '3.5': ['D', 'true', 'false'],
-  // '3.6': ['A', 'C', 'true', 'true'],
-  // '3.7': ['true'],
-  // '4.1': ['B', 'true', 'true'],
-  // '4.2': ['B', 'D', 'false'],
-  // '4.3': ['C', 'false', 'true'],
-  // '4.4': ['D', 'D', 'true'],
-  // '4.5': ['true', 'true'],
-// };
-
-
 
 ////////////////////////////////////////////////////////////////////////
 //                            MD5 Library                             //
