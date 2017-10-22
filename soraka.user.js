@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Soraka
 // @namespace    https://github.com/ahonn/soraka
-// @version      0.5.0
+// @version      0.5.1
 // @description  超星 Mooc 视频助手 for Tampermonkey
 // @author       Ahonn <ahonn95@outlook.com>
 // @match        https://mooc1-2.chaoxing.com/mycourse/studentstudy?*
@@ -91,6 +91,7 @@ class Logger {
 const API_HOST = 'https://mooc1-2.chaoxing.com';
 const RAW_HOST = 'https://raw.githubusercontent.com/ahonn/soraka/master';
 const SCRIPT_URL = 'https://greasyfork.org/zh-CN/scripts/34358-soraka';
+const JQUERY_URL = '//code.jquery.com/jquery-latest.min.js';
 
 // load script message
 const LOAD_SCRIPT_LOADING = '正在加载脚本...';
@@ -112,7 +113,7 @@ const BEGIN_WATCH_CHAPTER_VIDEO = (title, duration) => `开始自动观看视频
 const END_WATCH_CHAPTER_VIDEO = (title, duration) => `完成自动观看视频: ${title}`;
 const WATCH_CHAPTER_VIDEO_PROGRESS = (progress, percentum) => `观看进度: ${progress} ${percentum}%`;
 const AUTO_ANSWER_QUESTION = (question) => `自动回答视频问题: ${question}`;
-const ALERT_CHAPTER_TEST = `已完成自动观看，请完成章节测试...`;
+const ALERT_CHAPTER_TEST = `已完成自动观看，请完成章节测试`;
 
 class Soraka {
   constructor() {
@@ -124,7 +125,7 @@ class Soraka {
     });
 
     this.script = document.createElement('script');
-    this.script.src = "//code.jquery.com/jquery-latest.min.js";
+    this.script.src = JQUERY_URL;
     this.script.onload = this.onload.bind(this);
   }
 
