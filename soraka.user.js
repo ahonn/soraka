@@ -115,6 +115,8 @@ const WATCH_CHAPTER_VIDEO_PROGRESS = (progress, percentum) => `观看进度: ${p
 const AUTO_ANSWER_QUESTION = (question) => `自动回答视频问题: ${question}`;
 const ALERT_CHAPTER_TEST = `已完成自动观看，请完成章节测试`;
 
+const NETWORK_ERROR = `网络错误，请刷新重试`;
+
 class Soraka {
   constructor() {
     this.iframe = null;
@@ -187,6 +189,7 @@ class Soraka {
       $.ajax({
         url,
         success: data => resolve(data),
+        error: _ => alert(NETWORK_ERROR),
       });
     });
   }
@@ -202,6 +205,7 @@ class Soraka {
           const datas = (data && data[0]) ? data[0].datas : [];
           resolve(datas);
         },
+        error: _ => alert(NETWORK_ERROR),
       });
     });
   }
@@ -258,6 +262,7 @@ class Soraka {
           }).toArray();
           resolve(chapters);
         },
+        error: _ => alert(NETWORK_ERROR),
       });
     });
   }
@@ -337,6 +342,7 @@ class Soraka {
         url,
         dataType: 'json',
         success: data => resolve(data),
+        error: _ => alert(NETWORK_ERROR),
       });
     });
   }
