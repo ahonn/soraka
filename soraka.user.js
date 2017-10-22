@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Soraka
 // @namespace    https://github.com/ahonn/soraka
-// @version      0.5.1
+// @version      0.5.2
 // @description  超星 Mooc 视频助手 for Tampermonkey
 // @author       Ahonn <ahonn95@outlook.com>
 // @match        https://mooc1-2.chaoxing.com/mycourse/studentstudy?*
@@ -402,6 +402,14 @@ class Soraka {
     });
   }
 
+  jumpToChapterTest() {
+    const $testBtn = $('#dct2');
+    $testBtn.click();
+    setTimeout(_ => {
+      alert(ALERT_CHAPTER_TEST);
+    }, 500);
+  }
+
   onload() {
     this.checkVersion()
       .then(this.jumpToLastChapter.bind(this))
@@ -409,9 +417,7 @@ class Soraka {
         if (isLast) {
           this.getConfig().then(_ => {
             this.watchVideo().then(_ => {
-              setTimeout(_ => {
-                alert(ALERT_CHAPTER_TEST);
-              }, 500);
+              this.jumpToChapterTest();
             });
           });
         }
