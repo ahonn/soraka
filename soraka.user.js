@@ -77,7 +77,7 @@ class Logger {
 
   info(type, message) {
     const { prefix } = this;
-    const msg = prefix + ' > ' + message
+    const msg = prefix + ' > ' + message;
     const $info = document.querySelector(`#${prefix}-${type}`);
     $info.innerHTML = msg;
     console.log(msg);
@@ -361,7 +361,7 @@ class Soraka {
 
       const progressBar = '|' + '█'.repeat(50) + '|';
       this.logger.info('progress', WATCH_CHAPTER_VIDEO_PROGRESS(progressBar, 100));
-    }
+    };
 
     return new Promise(resolve => {
       (function loop(res) {
