@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Soraka
 // @namespace    https://github.com/ahonn/soraka
-// @version      0.5.2
+// @version      0.5.3
 // @description  超星 Mooc 视频助手 for Tampermonkey
 // @author       Ahonn <ahonn95@outlook.com>
 // @match        https://mooc1-2.chaoxing.com/mycourse/studentstudy?*
@@ -98,6 +98,8 @@ const LOAD_SCRIPT_LOADING = '正在加载脚本...';
 const LOAD_SCRIPT_FAILURE = '脚本加载失败，请刷新重试...';
 const LOAD_SCRIPT_SUCCESS = '脚本加载完成...';
 
+const NOT_SUPPORT_PAGE = `不支持非视频页面，请自行解决`;
+
 // check version message
 const CHECK_VERSION_LOADING = '正在进行脚本版本检查...';
 const CHECK_VERSION_FAILURE = '脚本版本检查失败，请刷新重试...';
@@ -146,6 +148,11 @@ class Soraka {
       try {
         let wrapper = document.querySelector('#iframe').contentWindow.document.body;
         this.iframe = wrapper.querySelector('iframe').contentWindow;
+
+        if (this.iframe.data && this.iframe.data.read) {
+          clearInterval(id);
+          this.logger.info('loading', NOT_SUPPORT_PAGE);
+        }
 
         if (this.iframe.config) {
           clearInterval(id);
