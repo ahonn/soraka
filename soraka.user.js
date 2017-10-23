@@ -91,14 +91,14 @@ class Logger {
 const API_HOST = 'https://mooc1-2.chaoxing.com';
 const RAW_HOST = 'https://raw.githubusercontent.com/ahonn/soraka/master';
 const SCRIPT_URL = 'https://greasyfork.org/zh-CN/scripts/34358-soraka';
-const JQUERY_URL = '//code.jquery.com/jquery-latest.min.js';
+const JQUERY_URL = 'https://code.jquery.com/jquery-latest.min.js';
 
 // load script message
 const LOAD_SCRIPT_LOADING = '正在加载脚本...';
 const LOAD_SCRIPT_FAILURE = '脚本加载失败，请刷新重试...';
 const LOAD_SCRIPT_SUCCESS = '脚本加载完成...';
 
-const NOT_SUPPORT_PAGE = `不支持非视频页面，请自行解决`;
+const NOT_SUPPORT_PAGE = '不支持非视频页面，请自行解决';
 
 // check version message
 const CHECK_VERSION_LOADING = '正在进行脚本版本检查...';
@@ -107,17 +107,17 @@ const NOT_LAST_VERSION = (current, last) => `当前版本为 v${current}，最�
 const IS_LAST_VERSION = (current) => `当前版本为 v${current}，无需更新...`;
 
 // course message
-const LOAD_CHAPTERS_INFO = `正在获取章节信息...`;
-const JUMP_TO_LAST_CHAPTER = `正在跳转到最新章节...`;
-const LOAD_CHAPTERS_VIDEO_INFO = `正在获取章节视频信息...`;
-const LOAD_CHAPTERS_QUESTION_INFO = `正在获取视频问题信息...`;
+const LOAD_CHAPTERS_INFO = '正在获取章节信息...';
+const JUMP_TO_LAST_CHAPTER = '正在跳转到最新章节...';
+const LOAD_CHAPTERS_VIDEO_INFO = '正在获取章节视频信息...';
+const LOAD_CHAPTERS_QUESTION_INFO = '正在获取视频问题信息...';
 const BEGIN_WATCH_CHAPTER_VIDEO = (title, duration) => `开始自动观看视频: ${title}，时长: ${duration}s`;
 const END_WATCH_CHAPTER_VIDEO = (title, duration) => `完成自动观看视频: ${title}`;
 const WATCH_CHAPTER_VIDEO_PROGRESS = (progress, percentum) => `观看进度: ${progress} ${percentum}%`;
 const AUTO_ANSWER_QUESTION = (question) => `自动回答视频问题: ${question}`;
-const ALERT_CHAPTER_TEST = `已完成自动观看，请完成章节测试`;
+const ALERT_CHAPTER_TEST = '已完成自动观看，请完成章节测试';
 
-const NETWORK_ERROR = `网络错误，请刷新重试`;
+const NETWORK_ERROR = '网络错误，请刷新重试';
 
 class Soraka {
   constructor() {
@@ -293,7 +293,6 @@ class Soraka {
 
   answerVideoQuestion(question) {
     const randomId = Math.floor(Math.random() * question.options.length);
-    // 回答错误时发送请求
     if (!question.options[randomId].isRight) {
       const resourceid = question.resourceId;
       const answer = question.options[randomId].name;
@@ -308,7 +307,7 @@ class Soraka {
   }
 
   encodeEnc(playingTime) {
-    // 反编译 player.swf 文件，加密字符串位于: com.chaoxing.player.comp.ExternalComp:L235
+    // player.swf: com.chaoxing.player.comp.ExternalComp:L235
     const salt = 'd_yHJ!$pdA~5';
 
     const { clazzId, userid, jobid, objectId, duration } = this.config;
