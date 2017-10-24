@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Soraka
 // @namespace    https://github.com/ahonn/soraka
-// @version      0.5.3
+// @version      0.6.0
 // @description  超星 Mooc 视频助手 for Tampermonkey
 // @author       Ahonn <ahonn95@outlook.com>
 // @match        https://mooc1-2.chaoxing.com/mycourse/studentstudy?*
@@ -354,7 +354,9 @@ class Soraka {
   }
 
   watchVideo() {
-    let now = 0;
+    const localNow = parseInt(localStorage.getItem('soraka-now'))
+
+    let now = localNow || 0
     let count = 0;
     const loopStep = 5;
     const logStep = 120;
@@ -363,6 +365,7 @@ class Soraka {
     this.logger.info('status', BEGIN_WATCH_CHAPTER_VIDEO(chapter.title, duration));
 
     const finishWatch = () => {
+      localStorage.removeItem('soraka-now')
       this.logger.info('status', END_WATCH_CHAPTER_VIDEO(chapter.title));
 
       const progressBar = '|' + '█'.repeat(50) + '|';
@@ -392,8 +395,9 @@ class Soraka {
           const progress = Math.floor(percentum / 2);
           const progressBar = '|' + '█'.repeat(progress) + '░'.repeat(50 - progress) + '|';
           this.logger.info('progress', WATCH_CHAPTER_VIDEO_PROGRESS(progressBar, percentum));
+          localStorage.setItem('soraka-now', now)
 
-          if (count === logStep || now === 0) {
+          if (count === logStep || now === 0 || now === localNow) {
             count = 0;
             this.sendVideoLog(now).then(res => {
               if (res && res.isPassed) {

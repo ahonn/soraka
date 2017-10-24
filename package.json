@@ -1,6 +1,6 @@
 {
   "name": "Soraka",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "description": "超星 Mooc 视频助手脚本",
   "main": "soraka.user.js",
   "repository": {
