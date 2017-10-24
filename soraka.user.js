@@ -354,9 +354,9 @@ class Soraka {
   }
 
   watchVideo() {
-    const localNow = parseInt(localStorage.getItem('soraka-now'))
+    const localNow = parseInt(localStorage.getItem('soraka-now'));
 
-    let now = localNow || 0
+    let now = localNow || 0;
     let count = 0;
     const loopStep = 5;
     const logStep = 120;
@@ -365,7 +365,7 @@ class Soraka {
     this.logger.info('status', BEGIN_WATCH_CHAPTER_VIDEO(chapter.title, duration));
 
     const finishWatch = () => {
-      localStorage.removeItem('soraka-now')
+      localStorage.removeItem('soraka-now');
       this.logger.info('status', END_WATCH_CHAPTER_VIDEO(chapter.title));
 
       const progressBar = '|' + '█'.repeat(50) + '|';
@@ -395,7 +395,7 @@ class Soraka {
           const progress = Math.floor(percentum / 2);
           const progressBar = '|' + '█'.repeat(progress) + '░'.repeat(50 - progress) + '|';
           this.logger.info('progress', WATCH_CHAPTER_VIDEO_PROGRESS(progressBar, percentum));
-          localStorage.setItem('soraka-now', now)
+          localStorage.setItem('soraka-now', now);
 
           if (count === logStep || now === 0 || now === localNow) {
             count = 0;
