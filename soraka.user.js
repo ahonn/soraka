@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Soraka
 // @namespace    https://github.com/ahonn/soraka
-// @version      0.6.0
+// @version      0.6.1
 // @description  超星 Mooc 视频助手 for Tampermonkey
 // @author       Ahonn <ahonn95@outlook.com>
 // @match        https://mooc1-2.chaoxing.com/mycourse/studentstudy?*
@@ -103,7 +103,7 @@ const NOT_SUPPORT_PAGE = '不支持非视频页面，请自行解决';
 // check version message
 const CHECK_VERSION_LOADING = '正在进行脚本版本检查...';
 const CHECK_VERSION_FAILURE = '脚本版本检查失败，请刷新重试...';
-const NOT_LAST_VERSION = (current, last) => `当前版本为 v${current}，最新版本为 v${last}，请<a href='${SCRIPT_URL}'>点击更新</a>...`;
+const NOT_LAST_VERSION = (current, last) => `当前版本为 v${current}，最新版本为 v${last}，请<a href='${SCRIPT_URL}' target='_blank'>点击更新</a>...`;
 const IS_LAST_VERSION = (current) => `当前版本为 v${current}，无需更新...`;
 
 // course message
