@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Soraka
 // @namespace    https://github.com/ahonn/soraka
-// @version      0.6.1
+// @version      0.7.0
 // @description  超星 Mooc 视频助手 for Tampermonkey
 // @author       Ahonn <ahonn95@outlook.com>
 // @match        https://mooc1-1.chaoxing.com/mycourse/studentstudy?*
