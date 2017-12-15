@@ -4,6 +4,7 @@
 // @version      0.6.1
 // @description  超星 Mooc 视频助手 for Tampermonkey
 // @author       Ahonn <ahonn95@outlook.com>
+// @match        https://mooc1-1.chaoxing.com/mycourse/studentstudy?*
 // @match        https://mooc1-2.chaoxing.com/mycourse/studentstudy?*
 // @grant        GM_addStyle
 // @connect      raw.githubusercontent.com
