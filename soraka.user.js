@@ -265,6 +265,7 @@ class Soraka {
                 number: $number.text().replace(/\s+/g, ' ').trim().split(' ')[0],
                 title: $link.attr('title'),
                 href: $link.attr('href'),
+                state: $number.text().replace(/\s+/g, ' ').trim().split(' ')[1],
               };
             }
           }).toArray();
@@ -277,9 +278,12 @@ class Soraka {
 
   jumpToLastChapter() {
     return this.getChapters().then(chapters => {
-      const lastActiveChapter = chapters.pop();
+      chapters.reverse();
+      var lastActiveChapter = chapters.pop();
+      while(lastActiveChapter.state === undefined ){
+        lastActiveChapter = chapters.pop();
+      }
       this.config.chapter = lastActiveChapter;
-
       const last = API_HOST + lastActiveChapter.href;
       const current = window.location.href;
 
@@ -433,9 +437,7 @@ class Soraka {
       .then(isLast => {
         if (isLast) {
           this.getConfig().then(_ => {
-            this.watchVideo().then(_ => {
-              this.jumpToChapterTest();
-            });
+            this.watchVideo().then(_ => {setTimeout("location.reload()",2000);});
           });
         }
       });
